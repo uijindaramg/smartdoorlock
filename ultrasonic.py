@@ -1,10 +1,35 @@
 # ultrasonic.py
+import RPi.GPIO as GPIO
 import time
 
-def check_ultrasonic_sensor():
-    print("초음파 센서 확인 중...")
-    time.sleep(1)  # 센서 확인 시간 시뮬레이션
+trig = 10
+echo = 8
 
-    # True일 때만 얼굴 등록이 가능하도록
-    user_detected = True  # 예를 들어 사용자가 적절한 위치에 있다고 가정
-    return user_detected
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(echo, GPIO.IN)
+GPIO.setup(trig, GPIO.OUT)
+GPIO.output(trig, GPIO.LOW)
+
+def check_ultrasonic_sensor():
+    GPIO.output(trig, GPIO.HIGH)
+    time.sleep(0.00001)
+    GPIO.output(trig, GPIO.LOW)
+    
+    stop = 0
+    start = 0
+    
+    while GPIO.input(echo) == GPIO.LOW:
+        start = time.time()
+    while GPIO.input(echo) == GPIO.HIGH:
+        stop = time.time()
+    duration = stop -start
+    distance = (duration * 340 * 100) / 2
+    
+    print(f"Measured distance: {distance:.2f} cm")
+    
+    if 40 < distance < 60:
+        return True
+    return False
+
+def cleanup():
+    GPIO.cleanup()
