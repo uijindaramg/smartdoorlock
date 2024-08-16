@@ -2,10 +2,10 @@
 import RPi.GPIO as GPIO
 import time
 
-trig = 10
-echo = 8
+trig = 23
+echo = 24
 
-GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BCM)
 GPIO.setup(echo, GPIO.IN)
 GPIO.setup(trig, GPIO.OUT)
 GPIO.output(trig, GPIO.LOW)
