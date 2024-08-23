@@ -7,20 +7,20 @@ import firebase_admin
 from firebase_admin import credentials, storage
 import io
 
-# 경로 설정
+# 절대 경로 설정
 BASE_DIR = '/home/ewha'
 HAAR_CASCADE_PATH = os.path.join(BASE_DIR, 'haarcascade/haarcascade_frontalface_default.xml')
 TRAINER_PATH = os.path.join(BASE_DIR, 'trainer.yml')
 
-# Firebase 초기화
+### Firebase 초기화 함수
 def initialize_firebase():
     cred = credentials.Certificate("/home/ewha/locklock-3807d-firebase-adminsdk-1qsjh-2e8d5870f7.json")
     firebase_admin.initialize_app(cred, {
-        'storageBucket': 'locklock-3807d.appspot.com'  # gs:// 생략 가능
+        'storageBucket': 'locklock-3807d.appspot.com'
     })
     return storage.bucket()
 
-# 카메라 초기화
+### 카메라 초기화 함수
 def initialize_camera():
     try:
         picam2 = Picamera2()
@@ -45,7 +45,7 @@ def is_face_large_enough(face, frame_width, frame_height, min_percentage=0.4):
     face_percentage = face_area / frame_area
     return face_percentage >= min_percentage
 
-# Firebase에 이미지 업로드 함수
+### Firebase에 이미지 업로드하는 함수
 def upload_to_firebase(image_data, cloud_file_name, bucket):
     _, buffer = cv2.imencode('.jpg', image_data)
     image_io = io.BytesIO(buffer)
@@ -53,13 +53,19 @@ def upload_to_firebase(image_data, cloud_file_name, bucket):
     blob.upload_from_file(image_io, content_type='image/jpeg')
     print(f"Uploaded to {cloud_file_name} in Firebase.")
 
-# 이미 등록된 사용자 확인 함수
+### 이미 등록된 사용자 확인하는 함수
 def is_user_registered(face_id, bucket):
     user_folder = f"registered_faces/{face_id}/"
     blobs = bucket.list_blobs(prefix=user_folder)
-    return len(list(blobs)) > 0
+    files = list(blobs)
+    if len(files) > 0:
+        print(f"User {face_id} is already registered.")
+        return True
+    else:
+        print(f"User {face_id} is not registered.")
+        return False
 
-# 얼굴이 이미 등록된 사용자인지 확인하는 함수
+### 얼굴이 이미 등록된 사용자 확인하는 함수
 def is_face_already_registered(face_id, recognizer, frame, faceCascade, threshold=60):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = faceCascade.detectMultiScale(gray, 1.3, 5)
@@ -69,29 +75,21 @@ def is_face_already_registered(face_id, recognizer, frame, faceCascade, threshol
             return True
     return False
 
-# 이미지와 레이블을 가져오는 함수
-def get_images_and_labels(bucket, faceCascade):
-    blobs = bucket.list_blobs(prefix='registered_faces/')
-    faceSamples = []
-    ids = []
-    for blob in blobs:
-        if not blob.name.endswith('.jpg'):
-            continue
-        try:
-            image_data = blob.download_as_bytes()
-            PIL_img = Image.open(io.BytesIO(image_data)).convert('L')
-            img_numpy = np.array(PIL_img, 'uint8')
-            id = int(blob.name.split(".")[1])
-            faces = faceCascade.detectMultiScale(img_numpy)
-            for (x, y, w, h) in faces:
-                faceSamples.append(img_numpy[y:y+h, x:x+w])
-                ids.append(id)
-        except Exception as e:
-            print(f"Error processing {blob.name}: {str(e)}")
-    return faceSamples, ids
-
-# 얼굴 등록 함수
+### 사용자 얼굴 등록 함수
 def register_face(face_id, picam2, bucket, faceCascade, recognizer):
+    if is_user_registered(face_id, bucket):
+        print("이미 등록된 사용자명입니다.")
+        return
+
+    # 첫 번째 이미지 촬영 및 얼굴 중복 확인
+    while True:
+        frame = picam2.capture_array()
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        if is_face_already_registered(face_id, recognizer, frame, faceCascade):
+            print("이미 얼굴 등록이 완료된 사용자입니다.")
+            return
+        break
+
     count = 0
     print("Starting video stream...")
 
@@ -114,54 +112,44 @@ def register_face(face_id, picam2, bucket, faceCascade, recognizer):
                     cloud_file_name = f"registered_faces/{face_id}/User.{face_id}.{count}.jpg"
                     upload_to_firebase(frame, cloud_file_name, bucket)
 
+                else:
+                    print("Detected face is not completely in the frame or not large enough.")
+                
             cv2.imshow('image', frame)
 
             key = cv2.waitKey(1) & 0xFF
-            if key == 27:
+            if key == 27:  # 'ESC' 키를 누르면 종료
                 break
         except Exception as e:
             print(f"An error occurred during the video stream: {str(e)}")
+            break
 
     cv2.destroyAllWindows()
 
+### 얼굴 데이터 학습 함수
+def getImagesAndLabels(bucket, faceCascade):
+    blobs = bucket.list_blobs(prefix='registered_faces/')
+    faceSamples = []
+    ids = []
+    for blob in blobs:
+        if not blob.name.endswith('.jpg'):
+            continue
+        try:
+            image_data = blob.download_as_bytes()
+            PIL_img = Image.open(io.BytesIO(image_data)).convert('L')
+            img_numpy = np.array(PIL_img, 'uint8')
+            id = int(blob.name.split(".")[1])
+            faces = faceCascade.detectMultiScale(img_numpy)
+            for (x, y, w, h) in faces:
+                faceSamples.append(img_numpy[y:y+h, x:x+w])
+                ids.append(id)
+        except Exception as e:
+            print(f"Error processing {blob.name}: {str(e)}")
+    return faceSamples, ids
+
+def train_faces(bucket, faceCascade, recognizer):
     print("\n [INFO] Training faces. It will take a few seconds. Wait ...")
-    faces, ids = get_images_and_labels(bucket, faceCascade)
+    faces, ids = getImagesAndLabels(bucket, faceCascade)
     recognizer.train(faces, np.array(ids))
     recognizer.write(TRAINER_PATH)
     print(f"\n [INFO] {len(np.unique(ids))} faces trained. Exiting Program")
-
-### 메인 실행 블록
-if __name__ == "__main__":
-    # Firebase 초기화
-    bucket = initialize_firebase()
-
-    # 카메라 초기화
-    picam2 = initialize_camera()
-    if picam2 is None:
-        exit()
-
-    # 얼굴 인식을 위한 Haar Cascade 분류기 불러오기
-    faceCascade = cv2.CascadeClassifier(HAAR_CASCADE_PATH)
-
-    # LBPH 얼굴 인식기 초기화
-    recognizer = cv2.face.LBPHFaceRecognizer_create()
-
-    # 사용자 ID 입력 및 등록 확인 루프
-    while True:
-        face_id = input('\n USER ID 입력하고 엔터 누르세요 ')  # 1부터 입력
-
-        if is_user_registered(face_id, bucket):
-            print("이미 등록된 사용자명입니다.")
-            continue
-
-        # 첫 번째 이미지 촬영 및 얼굴 중복 확인
-        frame = picam2.capture_array()
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        if is_face_already_registered(face_id, recognizer, frame, faceCascade):
-            print("이미 얼굴 등록이 완료된 사용자입니다.")
-            continue
-
-        break
-
-    # 얼굴 등록
-    register_face(face_id, picam2, bucket, faceCascade, recognizer)
