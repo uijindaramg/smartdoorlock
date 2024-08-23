@@ -1,33 +1,43 @@
-<!-- templates/insertuser.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사용자 등록</title>
-    <script>
-        function startRegistration() {
-            fetch('/start-registration', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message);
-                if (data.status === "user_detected") {
-                    performFaceRecognition();
-                }
-            });
-        }
-
-        function performFaceRecognition() {
-            fetch('/perform-face-recognition', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message);
-            });
-        }
-    </script>
+    <title>User Registration</title>
 </head>
 <body>
-    <h1>사용자 등록</h1>
-    <button onclick="startRegistration()">등록 시작</button>
+    <h1>User Registration</h1>
+    <button id="start-button">Start Registration</button>
+    <p id="status"></p>
+
+    <script>
+        document.getElementById("start-button").onclick = function() {
+            fetch('/start_ultrasonic', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        document.getElementById("status").textContent = data.message;
+                        
+                        // Start face registration
+                        let userID = prompt("Please enter your User ID:");
+                        if (userID) {
+                            let formData = new FormData();
+                            formData.append('userID', userID);
+                            
+                            fetch('/start_face_registration', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                document.getElementById("status").textContent = data.message;
+                            });
+                        }
+                    } else {
+                        document.getElementById("status").textContent = data.message;
+                    }
+                });
+        };
+    </script>
 </body>
 </html>
