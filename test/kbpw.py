@@ -50,13 +50,13 @@ try:
 			else:
 				print(inputPassword)
 				if password == inputPassword:
-					print("door open")
+					print("door open")  # 비밀번호 일치 시 문 열림
 					door = 1
 				else:
-					print("password is not valid")
+					print("password is not valid")  # 비밀번호 불일치 시 메시지
 					door = 0
-				inputPassword = []
-				n = 0
+				inputPassword = []  # 입력된 비밀번호 초기화
+				n = 0  # 입력된 비밀번호 길이 초기화
 						
 finally:
 	GPIO.cleanup()
