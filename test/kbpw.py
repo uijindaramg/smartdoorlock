@@ -35,27 +35,28 @@ def getKey():
 	return (button)
 	
 try:
-	inputPassword = []
-	password = [10, 11, 12, 13, 14, 15, 16]
-	n = 0
-	door = 0
+	inputPassword = []  # 입력된 비밀번호를 저장할 리스트
+	password = [10, 11, 12, 13, 14, 15, 16]  # 정해진 비밀번호
+	n = 0  # 입력된 비밀번호의 길이
+	door = 0  # 문 상태 (0: 닫힘, 1: 열림)
 	
 	while True:
 		key = getKey()
 		
-		if(key > 0):
-			if(key >=10 and n < 10):
+		if key > 0:
+			if key >=10 and n < 10:
 				inputPassword.append(key)
 				n += 1
 			else:
 				print(inputPassword)
-				if(password == inputPassword):
+				if password == inputPassword:
 					print("door open")
 					door = 1
 				else:
 					print("password is not valid")
 					door = 0
-					inputPassword = []
+				inputPassword = []
+				n = 0
 						
 finally:
 	GPIO.cleanup()
