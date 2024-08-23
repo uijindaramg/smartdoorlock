@@ -36,7 +36,9 @@ def getKey():
 	
 try:
 	inputPassword = []
+	password = [10, 11, 12, 13, 14, 15, 16]
 	n = 0
+	door = 0
 	
 	while True:
 		key = getKey()
@@ -46,7 +48,14 @@ try:
 				inputPassword.append(key)
 				n += 1
 			else:
-				print(inputPassword)	
+				print(inputPassword)
+				if(password == inputPassword):
+					print("door open")
+					door = 1
+				else:
+					print("password is not valid")
+					door = 0
+					inputPassword = []
 						
 finally:
 	GPIO.cleanup()
