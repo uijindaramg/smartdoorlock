@@ -35,14 +35,16 @@ def getKey():
 	return (button)
 	
 try:
-	 inputPassword = list()
-	 n = 0
+	inputPassword = []
+	n = 0
+	
 	while True:
 		key = getKey()
+		
 		if(key > 0):
 			if(key >=10 and n < 10):
-				inputPassword[j] = key
-				n = n + 1
+				inputPassword.append(key)
+				n += 1
 			else:
 				print(inputPassword)	
 						
