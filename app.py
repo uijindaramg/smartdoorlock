@@ -33,6 +33,8 @@ def start_ultrasonic():
 def start_face_registration():
     user_id = request.form.get('userID')
     face_insert.register_face(user_id, picam2, bucket, faceCascade, recognizer)
+    # 얼굴 등록 후 모델을 학습시킴
+    face_insert.train_faces(bucket, faceCascade, recognizer)
     return jsonify({"status": "success", "message": "Face registered successfully!"})
 
 if __name__ == '__main__':
