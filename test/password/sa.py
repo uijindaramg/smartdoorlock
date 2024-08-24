@@ -1,5 +1,7 @@
 import RPi.GPIO as GPIO
 import time
+import sys
+import led_buzzer
 
 inputKeys = 16  #버튼 16개 사용
 keyPressed = 0  #키패드 초기화
@@ -38,6 +40,7 @@ try:
 	inputPassword = []  # 입력된 비밀번호를 저장할 리스트
 	password = [10, 11, 12, 13, 14, 15, 16]  # 정해진 비밀번호
 	n = 0  # 입력된 비밀번호의 길이
+	attempts = 0
 	door = 0  # 문 상태 (0: 닫힘, 1: 열림)
 	
 	while True:
@@ -52,9 +55,21 @@ try:
 				if password == inputPassword:
 					print("door open")
 					door = 1
+					led_on(3)
+					buzzer_CEGC()
+					time.sleep(1)
+					led_off(3)
 				else:
 					print("password is not valid")
 					door = 0
+					attempts += 1
+					led_on(1)
+					buzzer_BEEP()
+					if attempts >= 5:
+						print("Password error 5 times. Program exit.")
+						sys.exit()
+					time.sleep(1)
+					led_off(1)
 				inputPassword = []
 				n = 0
 						
