@@ -76,3 +76,5 @@ try:
 finally:
 	GPIO.cleanup()
 	inputPassword = []
+
+sys.exit()
