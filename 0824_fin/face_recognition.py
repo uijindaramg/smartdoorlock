@@ -105,6 +105,7 @@ while True:
 		                
                     print("Recognition successful, opening door...")
                     #subprocess.run(["python3", "open.py"])
+		    cv2.destroyAllWindows()
                     subprocess.run(["python3", "dlControl.py"])
                     sys.exit()
                     
@@ -122,6 +123,7 @@ while True:
         
         if mismatch_count == 5 :
             print("5 mismatches detected, executing password.py...")
+	    cv2.destroyAllWindows()
             subprocess.run(["python3", "kbpw.py"])  # password.py 파일 실행
             sys.exit()
         
