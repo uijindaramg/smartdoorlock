@@ -59,6 +59,7 @@ try:
 					led_buzzer.Buzzer_CEGC()
 					time.sleep(1)
 					led_buzzer.led_off(3)
+					sys.exit()
 				else:
 					print("password is not valid")
 					door = 0
@@ -77,4 +78,3 @@ finally:
 	GPIO.cleanup()
 	inputPassword = []
 
-sys.exit()
