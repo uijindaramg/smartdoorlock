@@ -12,6 +12,9 @@ faceCascade = face_insert.cv2.CascadeClassifier(face_insert.HAAR_CASCADE_PATH)
 recognizer = face_insert.cv2.face.LBPHFaceRecognizer_create()
 
 
+PASSWORD_FILE_PATH = '/home/ewha/password.txt'
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -36,6 +39,18 @@ def start_face_registration():
     # 얼굴 등록 후 모델을 학습시킴
     face_insert.train_faces(bucket, faceCascade, recognizer)
     return jsonify({"status": "success", "message": "Face registered successfully!"})
+    
+@app.route('/set_password', methods=['GET', 'POST'])
+def set_password():
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if len(password) == 8:
+            with open(PASSWORD_FILE_PATH, 'w') as f:
+                f.write(password)
+            return jsonify({"status": "success", "message": "Password saved successfully!"})
+        else:
+            return jsonify({"status": "fail", "message": "Password must be exactly 8 characters long."})
+    return render_template('password.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
