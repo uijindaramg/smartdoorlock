@@ -12,7 +12,12 @@ SD0_PIN = 5  #SD0 5번 핀에 연결
 
 GPIO.setup(SCL_PIN, GPIO.OUT)  #SCL 핀 출력으로 설정
 GPIO.setup(SD0_PIN, GPIO.IN)  #SD0 핀 입력으로 설
+with open("password.txt", "r") as file:
+    # 파일 내용 읽기 (strip()으로 공백 제거)
+    content = file.read().strip()
 
+    # 문자열을 리스트로 변환
+    password_stored = [int(char)+8 for char in content]
 def getKey():
 	global keyPressed
 	button = 0
@@ -38,7 +43,7 @@ def getKey():
 	
 try:
 	inputPassword = []  # 입력된 비밀번호를 저장할 리스트
-	password = [10, 11, 12, 13, 14, 15, 16]  # 정해진 비밀번호
+	password = password_stored  # 정해진 비밀번호
 	n = 0  # 입력된 비밀번호의 길이
 	attempts = 0
 	door = 0  # 문 상태 (0: 닫힘, 1: 열림)
