@@ -87,6 +87,17 @@
         function render_home() {
           window.location.href = '/';
         }
+        function fetchTempHumidity() {
+            fetch('/get_temp_humidity')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('temperature').innerText = data.temperature !== null ? `${data.temperature} °C` : 'Error';
+                    document.getElementById('humidity').innerText = data.humidity !== null ? `${data.humidity} %` : 'Error';
+                })
+                .catch(error => console.error('Error fetching temperature and humidity:', error));
+        }
+
+        setInterval(fetchTempHumidity, 10000); // Fetch data every 5 seconds
     </script>
 </head>
 
@@ -95,6 +106,8 @@
     <div class="header_potato_ment">
         <p><h1 class="header-text">&#128272;</h1></p>
         <p><h1 class="header-text">SMARTDOORLOCK</h1></p>
+        <p>Temperature: <span id="temperature">Loading...</span></p>
+        <p>Humidity: <span id="humidity">Loading...</span></p>
     </div>
     <div class="mypost_1"><button onclick="location.href='/register_user'" type="button" class="btn btn-outline-secondary">사용자 등록하기</button></div>
     <div class="mypost_1"><button onclick="location.href='/set_password'" type="button" class="btn btn-outline-secondary">비밀번호 재설정</button></div>
