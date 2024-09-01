@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import ultrasonic
 import face_insert
+import sensor_data
 
 app = Flask(__name__)
 # Firebase, 카메라 및 얼굴 인식 모델 초기화
