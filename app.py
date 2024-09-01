@@ -51,6 +51,11 @@ def set_password():
         else:
             return jsonify({"status": "fail", "message": "Password must be exactly 8 characters long."})
     return render_template('password.html')
+    
+@app.route('/get_temp_humidity', methods=['GET'])
+def get_temp_humidity():
+    data = sensor_data.read_temperature_humidity()  # Call the function from sensor_data module
+    return jsonify(data)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
